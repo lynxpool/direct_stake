@@ -12,7 +12,6 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IDepositContract} from "./interfaces/IDepositContract.sol";
 import "./EIP712.sol";
-import "hardhat/console.sol";
 
 /**
  * @title RockX Ethereum Direct Staking Contract
@@ -156,25 +155,10 @@ contract LynxDirectStaking is
         bytes calldata paramsSig
     ) public view returns (bool) {
         // do not accept paramsSig.length == 64
-        console.log("sig length", paramsSig.length);
         require(paramsSig.length == 65, "PARAMSIG_LENGTH_MISMATCH");
         bytes32 paramHash = _hashStakeParams(extraData, claimaddr, withdrawaddr, pubkeys, signatures);
-
-        //console.log("paramsSig:");
-        //console.logBytes(paramsSig);
-
-        console.log("paramHash:");
-        console.logBytes32(paramHash);
-
         bytes32 digest = _hashToSign(paramHash);
-        console.log("DOMAIN_SEPARATOR:");
-        console.logBytes32(DOMAIN_SEPARATOR);
-        console.log("digest:");
-        console.logBytes32(digest);
-
         address signer = ECDSA.recover(digest, paramsSig);
-        console.log("signer", signer);
-        console.log("oracle", oracle);
         return (signer == oracle);
     }
 
