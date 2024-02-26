@@ -1,0 +1,63 @@
+{
+  "types": {
+    "EIP712Domain": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "version",
+        "type": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "name": "verifyingContract",
+        "type": "address"
+      }
+    ],
+    "StakeParams": [
+      {
+        "name": "extraData",
+        "type": "uint256"
+      },
+      {
+        "name": "claimaddr",
+        "type": "address"
+      },
+      {
+        "name": "withdrawaddr",
+        "type": "address"
+      },
+      {
+        "name": "pubkeys",
+        "type": "bytes[]"
+      },
+      {
+        "name": "signatures",
+        "type": "bytes[]"
+      }
+    ]
+  },
+  "primaryType": "StakeParams",
+  "message": {
+    "claimaddr": "0x4b0897b0513fdc7c541b6d9d7e929c4e5364d2db",
+    "withdrawaddr": "0x4b0897b0513fdc7c541b6d9d7e929c4e5364d2db",
+    "pubkeys": [
+      "0x4b0897b0513fdc7c541b6d9d7e929c4e5364d2db"
+    ],
+    "signatures": [
+      "0x4b0897b0513fdc7c541b6d9d7e929c4e5364d2db"
+    ],
+    "extraData": "0x0"
+  },
+  "domain": {
+    "name": "LynxDirectStaking",
+    "version": "1.0.0",
+    "chainId": "31337",
+    "verifyingContract": "0xAdE429ba898c34722e722415D722A70a297cE3a2",
+    "salt": null
+  }
+}
