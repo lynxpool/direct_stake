@@ -10,7 +10,8 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import {IRewardsVault} from "./interfaces/IRewardsVault.sol";
 
 /**
- * @title Reward Pool
+ * @title Reward Pool Contract for Execution Layer
+ * This contract manages the reward distribution and withdrawal for the Lynx Execution Layer.
  */
 contract LynxExecutionLayerRewardsVault is
     Initializable,
@@ -51,24 +52,31 @@ contract LynxExecutionLayerRewardsVault is
      *
      * ======================================================================================
      */
-    receive() external payable {}
 
     /**
-     * @dev pause the contract
+     * @dev Fallback function to accept ETH transfers
+     */
+    receive() external payable {}
+
+     /**
+     * @dev Pause the contract
+     * Only callable by addresses with the PAUSER_ROLE
      */
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
     }
 
     /**
-     * @dev unpause the contract
+     * @dev Unpause the contract
+     * Only callable by addresses with the PAUSER_ROLE
      */
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
     }
 
     /**
-     * @dev initialization address
+     * @dev Initialize the contract
+     * Sets default values and grants roles to the contract deployer
      */
     function initialize() public initializer {
         __Pausable_init();
@@ -92,8 +100,10 @@ contract LynxExecutionLayerRewardsVault is
      * ======================================================================================
      */
     /**
-     * @dev manager withdraw revenue
-     */
+     * @dev Allows the manager to withdraw revenue.
+     * @param amount The amount of revenue to withdraw.
+     * @param to The address to receive the withdrawn revenue.
+    */
     function withdrawManagerRevenue(
         uint256 amount,
         address to
@@ -112,7 +122,8 @@ contract LynxExecutionLayerRewardsVault is
     }
 
     /**
-     * @dev set manager's fee in 1/1000
+     * @dev Sets the manager's fee share in 1/1000.
+     * @param milli The manager's fee share to set, in 1/1000.
      */
     function setManagerFeeShare(
         uint256 milli
@@ -130,7 +141,12 @@ contract LynxExecutionLayerRewardsVault is
      *
      * ======================================================================================
      */
-    // to join the reward pool
+
+    /**
+     * @dev Allows a user to join the rewards vault pool.
+     * @param claimaddr The address of the user joining the pool.
+     * @param amount The amount of tokens to be deposited into the pool.
+     */
     function joinVault(
         address claimaddr,
         uint256 amount
@@ -153,7 +169,11 @@ contract LynxExecutionLayerRewardsVault is
         emit PoolJoined(claimaddr, amount);
     }
 
-    // to leave a pool
+    /**
+     * @dev Allows a user to leave the rewards vault pool.
+     * @param claimaddr The address of the user leaving the pool.
+     * @param amount The amount of tokens to be withdrawn from the pool.
+     */
     function leaveVault(
         address claimaddr,
         uint256 amount
@@ -177,7 +197,11 @@ contract LynxExecutionLayerRewardsVault is
         emit PoolLeft(claimaddr, amount);
     }
 
-    // claimRewards
+    /**
+     * @dev Allows a user to claim rewards from the rewards vault pool.
+     * @param beneficiary The address where the claimed rewards will be sent.
+     * @param amount The amount of rewards to be claimed.
+     */
     function claimRewards(
         address beneficiary,
         uint256 amount
@@ -206,6 +230,10 @@ contract LynxExecutionLayerRewardsVault is
 
     // claimRewardsFor an account, the rewards will be only be claimed to the claim address for safety
     //  this function plays the role as 'settler for accounts', could only be called by controller contract.
+    /**
+     * @dev Allows the controller contract to claim rewards on behalf of an account.
+    * @param account The address of the account to claim rewards for.
+    */
     function claimRewardsFor(
         address account
     ) external nonReentrant whenNotPaused onlyRole(CONTROLLER_ROLE) {
@@ -230,7 +258,7 @@ contract LynxExecutionLayerRewardsVault is
     }
 
     /**
-     * @dev updateReward of tx fee
+     * @dev Updates the reward distribution based on the transaction fee.
      */
     function updateReward() public {
         if (address(this).balance > accountedBalance && totalShares > 0) {
@@ -248,14 +276,28 @@ contract LynxExecutionLayerRewardsVault is
      *
      * ======================================================================================
      */
+
+    /**
+     * @dev Retrieves the total shares accumulated in the contract.
+     * @return The total number of shares.
+     */
     function getTotalShare() external view returns (uint256) {
         return totalShares;
     }
 
+    /**
+     * @dev Retrieves the accounted balance in the contract.
+     * @return The accounted balance.
+     */
     function getAccountedBalance() external view returns (uint256) {
         return accountedBalance;
     }
 
+    /**
+     * @dev Retrieves the pending reward for a specific claim address.
+     * @param claimaddr The claim address for which the pending reward is to be retrieved.
+     * @return The pending reward for the specified claim address.
+    */
     function getPendingReward(
         address claimaddr
     ) external view returns (uint256) {
@@ -278,6 +320,10 @@ contract LynxExecutionLayerRewardsVault is
             MULTIPLIER;
     }
 
+    /**
+     * @dev Retrieves the pending manager revenue.
+     * @return The pending manager revenue.
+     */
     function getPendingManagerRevenue() external view returns (uint256) {
         uint256 managerReward;
         if (address(this).balance > accountedBalance) {
@@ -294,10 +340,20 @@ contract LynxExecutionLayerRewardsVault is
      *
      * ======================================================================================
      */
+
+    /**
+     * @dev Decreases the accounted balance by the specified amount.
+     * @param amount The amount to decrease from the accounted balance.
+     */
     function _balanceDecrease(uint256 amount) internal {
         accountedBalance -= amount;
     }
 
+    /**
+     * @dev Calculates the pending reward for the manager and the pool.
+     * @return managerR The pending reward for the manager.
+     * @return poolR The pending reward for the pool.
+     */
     function _calcPendingReward()
         internal
         view
@@ -319,9 +375,38 @@ contract LynxExecutionLayerRewardsVault is
      *
      * ======================================================================================
      */
+
+    /**
+     * @dev Emitted when an address joins the pool by depositing funds.
+     * @param claimaddr The address of the user who joined the pool.
+     * @param amount The amount deposited by the user.
+     */
     event PoolJoined(address claimaddr, uint256 amount);
+
+    /**
+     * @dev Emitted when an address leaves the pool by withdrawing funds.
+     * @param claimaddr The address of the user who left the pool.
+     * @param amount The amount withdrawn by the user.
+     */
     event PoolLeft(address claimaddr, uint256 amount);
+
+    /**
+     * @dev Emitted when an address claims their reward.
+     * @param beneficiary The address of the user who claimed the reward.
+     * @param amount The amount of reward claimed by the user.
+     */
     event Claimed(address beneficiary, uint256 amount);
+
+    /**
+     * @dev Emitted when the manager withdraws their fee from the pool.
+     * @param amount The amount of fee withdrawn by the manager.
+     * @param to The address where the fee is withdrawn to.
+     */
     event ManagerFeeWithdrawed(uint256 amount, address to);
+
+    /**
+     * @dev Emitted when the manager fee share is set.
+     * @param milli The new manager fee share expressed in milli (1/1000).
+     */
     event ManagerFeeSet(uint256 milli);
 }

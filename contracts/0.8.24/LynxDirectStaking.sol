@@ -89,7 +89,13 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev initialization
+     * @dev Initializes the Lynx Direct Staking contract with the specified deposit contract address.
+     * @param _depositContract The address of the deposit contract for the Ethereum 2.0 network.
+     * Initializes contract state variables, access control roles, and domain separator.
+     * Sets the default admin role, registry role, and pauser role to the deploying address.
+     * Calculates the domain separator using the contract name and version.
+     * Calculates the little endian representation of the deposit amount.
+     * @param _depositContract The address of the deposit contract for the Ethereum 2.0 network.
      */
     function initialize(address _depositContract) public initializer {
         depositContract = _depositContract;
@@ -111,7 +117,9 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev set signer adress
+     * @dev Sets the address of the oracle responsible for signing stake parameters.
+     * Only the account with the DEFAULT_ADMIN_ROLE can call this function.
+     * @param _oracle The address of the oracle.
      */
     function setOracle(address _oracle) external onlyRole(DEFAULT_ADMIN_ROLE) {
         oracle = _oracle;
@@ -120,7 +128,9 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev set reward pool contract address
+     * @dev Sets the address of the reward pool contract.
+     * Only the account with the DEFAULT_ADMIN_ROLE can call this function.
+     * @param _rewardsVault The address of the reward pool contract.
      */
     function setRewardsVault(
         address _rewardsVault
@@ -139,12 +149,14 @@ contract LynxDirectStaking is
      */
 
     /**
-     * @dev validate oracle authorization
-     * @param extraData extra data reserved
-     * @param claimaddr claim address
-     * @param withdrawaddr withdraw address
-     * @param pubkeys public keys
-     * @param signatures signatures
+     * @dev Validates the authorization of the oracle to sign stake parameters.
+     * @param extraData Extra data associated with the stake.
+     * @param claimaddr The address where rewards will be claimed.
+     * @param withdrawaddr The address where the staked ETH can be withdrawn.
+     * @param pubkeys An array of public keys associated with the validator.
+     * @param signatures An array of signatures, each corresponding to a public key.
+     * @param paramsSig The signature of the stake parameters, signed by the oracle.
+     * @return A boolean indicating whether the oracle is authorized to sign the stake parameters.
      */
     function validateOracleAuthorization(
         uint256 extraData,
@@ -163,7 +175,11 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev return registered validator by index
+     * @dev Returns the information of a registered validator by index.
+     * @param idx The index of the validator in the registry.
+     * @return pubkey The public key of the validator.
+     * @return claimAddress The address where rewards will be claimed.
+     * @return extraData Extra data associated with the validator.
      */
     function getValidatorInfo(
         uint256 idx
@@ -177,7 +193,12 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev return registered validator by range
+     * @dev Returns the information of registered validators within a specified range.
+     * @param from The start index of the range.
+     * @param to The end index of the range.
+     * @return pubkeys An array of public keys of the validators.
+     * @return claimAddresses An array of addresses where rewards will be claimed.
+     * @return extraDatas An array of extra data associated with the validators.
      */
     function getValidatorInfos(
         uint256 from,
@@ -207,14 +228,18 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev return validators count
+     * @dev Returns the total number of registered validators.
+     * @return The total number of registered validators.
      */
     function getNextValidators() external view returns (uint256) {
         return validatorRegistry.length;
     }
 
     /**
-     * @dev return exit queue
+     * @dev Returns the exit queue within the specified range.
+     * @param from The start index of the range.
+     * @param to The end index of the range.
+     * @return An array containing the indices of validators in the exit queue.
      */
     function getExitQueue(
         uint256 from,
@@ -230,7 +255,8 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev return exit queue length
+     * @dev Returns the length of the exit queue.
+     * @return The length of the exit queue.
      */
     function getExitQueueLength() external view returns (uint256) {
         return exitQueue.length;
@@ -245,7 +271,14 @@ contract LynxDirectStaking is
      */
 
     /**
-     * @dev user stakes
+     * @dev Allows a user to stake ETH to become a validator in the Lynx network.
+     * @param claimaddr The address where rewards will be claimed.
+     * @param withdrawaddr The address where the staked ETH can be withdrawn.
+     * @param pubkeys An array of public keys associated with the validator.
+     * @param signatures An array of signatures, each corresponding to a public key.
+     * @param paramsSig The signature of the stake parameters, signed by the oracle.
+     * @param extradata Additional data associated with the stake.
+     * @param tips Amount of ETH to be used as tips for the contract.
      */
     function stake(
         address claimaddr,
@@ -327,14 +360,17 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev users initiates exit for his validator
-     */
+     * @dev Initiates an exit request for a validator owned by the caller.
+     * @param validatorId The ID of the validator to exit.
+     * 
+    */
     function exit(uint256 validatorId) external {
         _exitValidator(validatorId, msg.sender);
     }
 
     /**
-     * @dev users initiates batch exit for his validators
+     * @dev Initiates batch exit requests for validators owned by the caller.
+     * @param validatorIds An array of validator IDs to exit.
      */
     function batchExit(uint256[] memory validatorIds) external {
         for (uint i = 0; i < validatorIds.length; i++) {
@@ -345,6 +381,8 @@ contract LynxDirectStaking is
     /**
      * @dev admin exit a validator in emergency, and return it's principal to validator owner,
      *  optionally to exit unclaimed mev rewards to claim address.
+     * @param validatorId The ID of the validator to exit.
+     * @param exitToClaimAddress Whether to exit unclaimed MEV rewards to the claim address.
      *
      * NOTE: a user must have contact with us to perform this operation.
      */
@@ -356,8 +394,10 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev batch emergency exit
-     */
+     * @dev Initiates batch emergency exits for validators by the admin.
+     * @param validatorIds An array of validator IDs to emergency exit.
+     * @param exitToClaimAddress Whether to exit unclaimed MEV rewards to the claim address.
+    */
     function batchEmergencyExit(
         uint256[] memory validatorIds,
         bool exitToClaimAddress
@@ -377,7 +417,9 @@ contract LynxDirectStaking is
      */
 
     /**
-     * @dev emergency exit a validator
+     * @dev Initiates an emergency exit for a validator.
+     * @param validatorId The ID of the validator to exit.
+     * @param exitToClaimAddress Indicates whether to exit unclaimed MEV rewards to the claim address.
      */
     function _emergencyExit(
         uint256 validatorId,
@@ -403,7 +445,9 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev exit a single validator
+     * @dev Initiates an exit request for a single validator.
+     * @param validatorId The ID of the validator to exit.
+     * @param sender The address initiating the exit request, must match the claim address of the validator.
      */
     function _exitValidator(uint256 validatorId, address sender) internal {
         ValidatorInfo storage info = validatorRegistry[validatorId];
@@ -418,7 +462,10 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev Invokes a deposit call to the official Deposit contract
+     * @dev Invokes a deposit call to the official Deposit contract.
+     * @param pubkey The public key of the validator.
+     * @param signature The signature of the validator.
+     * @param withdrawal_credential The withdrawal credential associated with the validator.
      */
     function _deposit(
         bytes calldata pubkey,
@@ -462,7 +509,9 @@ contract LynxDirectStaking is
     }
 
     /**
-     * @dev to little endian
+     * @dev Converts a uint64 value to little endian format.
+     * @param value The uint64 value to be converted.
+     * @return ret The little endian representation of the input value.
      * https://etherscan.io/address/0x00000000219ab540356cbb839cbe05303d7705fa#code
      */
     function to_little_endian_64(

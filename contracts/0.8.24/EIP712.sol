@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 contract EIP712 {
+    // Storage Variables
     bytes32 public constant EIP712_DOMAIN_TYPEHASH =
         keccak256(
             abi.encodePacked(
@@ -17,6 +18,12 @@ contract EIP712 {
             )
         );
 
+    /**
+     * @dev Constructs the EIP712 domain separator hash
+     * @param name The name of the domain
+     * @param version The version of the domain
+     * @return bytes32 The EIP712 domain separator hash
+     */
     function _hashDomain(
         string memory name,
         string memory version
@@ -33,6 +40,11 @@ contract EIP712 {
             );
     }
 
+    /**
+     * @dev Hashes an array of bytes
+     * @param arr The array of bytes to hash
+     * @return bytes32 The hash of the array of bytes
+     */
     function _hashBytesArrary(
         bytes[] calldata arr
     ) internal pure returns (bytes32) {
@@ -43,6 +55,15 @@ contract EIP712 {
         return keccak256(abi.encodePacked(hashes));
     }
 
+    /**
+     * @dev Hashes stake parameters
+     * @param extraData The extra data for the stake
+     * @param claimaddr The address to claim stakes
+     * @param withdrawaddr The address to withdraw stakes
+     * @param pubkeys The array of public keys
+     * @param signatures The array of signatures
+     * @return bytes32 The hash of the stake parameters
+     */
     function _hashStakeParams(
         uint256 extraData,
         address claimaddr,
@@ -63,6 +84,12 @@ contract EIP712 {
             );
     }
 
+
+    /**
+     * @dev Calculates the hash to sign
+     * @param paramHash The hash of the parameters
+     * @return bytes32 The hash to sign
+     */
     function _hashToSign(bytes32 paramHash) internal view returns (bytes32) {
         return
             keccak256(
