@@ -1,0 +1,18 @@
+{
+  "LynxExecutionLayerRewardsVault": {
+    "hash": "0xa0828922df2729d1ebb00f279a55bdda16e6a6fae150a9ce1c42a9a7c0d6b971",
+    "gasPrice": "41869614",
+    "gasLimit": "30000000",
+    "gasUsed": "834051",
+    "contractAddress": "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f",
+    "chainId": "31337"
+  },
+  "LynxDirectStaking": {
+    "hash": "0xa773301e4951f983be9028a8a9b02ecfbfdc1a00a059ff8364b9d3f3f0fb2040",
+    "gasPrice": "33267031",
+    "gasLimit": "30000000",
+    "gasUsed": "856443",
+    "contractAddress": "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F",
+    "chainId": "31337"
+  }
+}

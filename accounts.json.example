@@ -1,0 +1,6 @@
+{
+  "localhost": {
+    "mnemonic": "test test test test test test test test test test test junk"
+  },
+  "holesky": [""]
+}
