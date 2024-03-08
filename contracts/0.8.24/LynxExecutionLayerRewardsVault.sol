@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import {IRewardsVault} from "./interfaces/IRewardsVault.sol";
 
 /**
- * @title Reward Pool Contract for Execution Layer
+ * @title Execution Layer and MEV Rewards Vault
  * This contract manages the reward distribution and withdrawal for the Lynx Execution Layer.
  */
 contract LynxExecutionLayerRewardsVault is
@@ -166,7 +166,7 @@ contract LynxExecutionLayerRewardsVault is
         totalShares += amount;
 
         // log
-        emit PoolJoined(claimaddr, amount);
+        emit VaultJoined(claimaddr, amount);
     }
 
     /**
@@ -194,7 +194,7 @@ contract LynxExecutionLayerRewardsVault is
         totalShares -= amount;
 
         // log
-        emit PoolLeft(claimaddr, amount);
+        emit VaultLeft(claimaddr, amount);
     }
 
     /**
@@ -262,8 +262,8 @@ contract LynxExecutionLayerRewardsVault is
      */
     function updateReward() public {
         if (address(this).balance > accountedBalance && totalShares > 0) {
-            (uint256 managerR, uint256 poolR) = _calcPendingReward();
-            accShare += (poolR * MULTIPLIER) / totalShares;
+            (uint256 managerR, uint256 vaultR) = _calcPendingReward();
+            accShare += (vaultR * MULTIPLIER) / totalShares;
             managerRevenue += managerR;
             accountedBalance = address(this).balance;
         }
@@ -306,15 +306,15 @@ contract LynxExecutionLayerRewardsVault is
             return info.rewardBalance;
         }
 
-        uint256 poolReward;
+        uint256 vaultReward;
         if (address(this).balance > accountedBalance) {
-            (, poolReward) = _calcPendingReward();
+            (, vaultReward) = _calcPendingReward();
         }
 
         return
             info.rewardBalance +
             ((accShare +
-                (poolReward * MULTIPLIER) /
+                (vaultReward * MULTIPLIER) /
                 totalShares -
                 info.accSharePoint) * info.amount) /
             MULTIPLIER;
@@ -357,15 +357,15 @@ contract LynxExecutionLayerRewardsVault is
     function _calcPendingReward()
         internal
         view
-        returns (uint256 managerR, uint256 poolR)
+        returns (uint256 managerR, uint256 vaultR)
     {
         uint256 reward = address(this).balance - accountedBalance;
 
-        // distribute to manager and pool
+        // distribute to manager and vault
         managerR = (reward * managerFeeShare) / 1000;
-        poolR = reward - managerR;
+        vaultR = reward - managerR;
 
-        return (managerR, poolR);
+        return (managerR, vaultR);
     }
 
     /**
@@ -378,23 +378,18 @@ contract LynxExecutionLayerRewardsVault is
 
     /**
      * @dev Emitted when an address joins the pool by depositing funds.
-     * @param claimaddr The address of the user who joined the pool.
+     * @param claimaddr The address of the user who joined the vault.
      * @param amount The amount deposited by the user.
      */
-    event PoolJoined(address claimaddr, uint256 amount);
+    event VaultJoined(address claimaddr, uint256 amount);
 
     /**
      * @dev Emitted when an address leaves the pool by withdrawing funds.
      * @param claimaddr The address of the user who left the pool.
      * @param amount The amount withdrawn by the user.
      */
-    event PoolLeft(address claimaddr, uint256 amount);
+    event VaultLeft(address claimaddr, uint256 amount);
 
-    /**
-     * @dev Emitted when an address claims their reward.
-     * @param beneficiary The address of the user who claimed the reward.
-     * @param amount The amount of reward claimed by the user.
-     */
     event Claimed(address beneficiary, uint256 amount);
 
     /**
